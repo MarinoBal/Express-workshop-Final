@@ -33,6 +33,10 @@ app.use("/empleados", EmpleadoRuta);
 // 404
 app.use(notFound);
 
+// verificar conexion database
+require("./config/database");
+
+
 app.listen(process.env.PORT || 3000, () => {
   console.log('Servidor corriendo en http://localhost:3000');
 });
