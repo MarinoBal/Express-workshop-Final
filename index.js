@@ -1,7 +1,9 @@
 // dependencias
+require('dotenv').config();
 const express = require('express');
 const morgan = require('morgan');
 const app = express();
+const esadmin = require('./middleware/esadmin');
 
 // rutas
 const authRuta = require('./Routes/authRoutes');
@@ -29,7 +31,7 @@ app.use("/user", userRuta);
 
 // rutas privadas
   app.use(auth);
-app.use("/empleados", EmpleadoRuta);
+app.use("/empleados",auth, esadmin, EmpleadoRuta);
 
 // 404
 app.use(notFound);
