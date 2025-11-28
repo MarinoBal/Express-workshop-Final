@@ -8,7 +8,7 @@ module.exports = (req, res, next) => {
     return res.status(403).json({ message: "Token requerido" });
   }
 
-  const tokenCorrecto = token.split(" ")[1]; // "Bearer TOKEN"
+  const tokenCorrecto = token.split(" ")[1]; 
 
   jwt.verify(tokenCorrecto, JWT_KEY, (err, decoded) => {
     if (err) {

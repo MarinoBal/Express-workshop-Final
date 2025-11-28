@@ -1,13 +1,16 @@
 const express = require("express");
 const router = express.Router();
 const db = require("../config/database");
+const auth = require("../middleware/auth");
+const esadmin = require("../middleware/esadmin");
+
 
 // listar empleados
-router.get("/", (req, res) => {
+router.get("/",  auth, esadmin, (req, res, next) => {
     const query = "SELECT * FROM empleados";
 
     db.query(query, (err, rows) => {
-        if (err) return res.status(500).json({ message: "Error DB", err });
+        if (err) return res.status(500).json({ message: "error en la bd", err });
 
         res.status(200).json({
             message: "Lista de empleados",
@@ -17,30 +20,30 @@ router.get("/", (req, res) => {
 });
 
 //buscar empleados por nombre
-router.get("/buscar", (req, res) => {
+router.get("/buscar", auth, esadmin, (req, res, next) => {
     const { nombre } = req.query;
 
     if (!nombre) {
-        return res.status(400).json({ message: "Debe proporcionar un nombre" });
+        return res.status(400).json({ message: "Ingresa un nombre primero" });
     }
 
     const query = "SELECT * FROM empleados WHERE nombre LIKE ?";
     db.query(query, [`%${nombre}%`], (err, rows) => {
-        if (err) return res.status(500).json({ message: "Error DB", err });
+        if (err) return res.status(500).json({ message: "error en la bd", err });
 
         res.status(200).json({
-            message: "Resultados de búsqueda",
+            message: "Resultados: ",
             empleados: rows
         });
     });
 });
 
 // agregar empleado
-router.post("/", (req, res) => {
+router.post("/", auth, esadmin, (req, res, next) => {
     const { nombre, apellidos, telefono, correo, direccion } = req.body;
 
     if (!nombre || !apellidos) {
-        return res.status(400).json({ message: "Nombre y apellidos son obligatorios" });
+        return res.status(400).json({ message: "Falta nombre o apellidos" });
     }
 
     const query = `INSERT INTO empleados (nombre, apellidos, telefono, correo, direccion) 
@@ -50,14 +53,14 @@ router.post("/", (req, res) => {
         if (err) return res.status(500).json({ message: "Error DB", err });
 
         res.status(201).json({
-            message: "Empleado agregado correctamente",
+            message: "Se ingreso el empleado ",
             empleado_id: result.insertId
         });
     });
 });
 
 // editar empleado
-router.put("/:id", (req, res) => {
+router.put("/:id", auth, esadmin, (req, res, next) => {
     const { id } = req.params;
     const { nombre, apellidos, telefono, correo, direccion } = req.body;
 
@@ -67,22 +70,22 @@ router.put("/:id", (req, res) => {
         WHERE empleado_id = ?`;
 
     db.query(query, [nombre, apellidos, telefono, correo, direccion, id], (err) => {
-        if (err) return res.status(500).json({ message: "Error DB", err });
+        if (err) return res.status(500).json({ message: "error en la bd", err });
 
-        res.status(200).json({ message: "Empleado actualizado correctamente" });
+        res.status(200).json({ message: "Se actualizo el empleado" });
     });
 });
 
 // eliminar empleado
-router.delete("/:id", (req, res) => {
+router.delete("/:id", auth, esadmin, (req, res, next) => {
     const { id } = req.params;
 
     const query = "DELETE FROM empleados WHERE empleado_id = ?";
 
     db.query(query, [id], (err) => {
-        if (err) return res.status(500).json({ message: "Error DB", err });
+        if (err) return res.status(500).json({ message: "error en la bd", err });
 
-        res.status(200).json({ message: "Empleado eliminado correctamente" });
+        res.status(200).json({ message: "Se elimino el empleado " });
     });
 });
 

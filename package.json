@@ -1,7 +1,7 @@
 {
   "name": "express-workshop-final",
   "version": "1.0.0",
-  "description": "",
+  "description": "pRoyecto final del workshop de express",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
@@ -11,7 +11,8 @@
     "api",
     "express",
     "rest",
-    "nodejs"
+    "nodejs",
+    "ola:)"
   ],
   "repository": {
     "type": "git",
