@@ -29,34 +29,48 @@ router.get("/profile", require("../middleware/auth"), (req, res, next) => {
 
 // LOGIN
 router.post("/login", (req, res) => {
-  console.log("si entro al login  ");
+    const { user_mail, user_password } = req.body;
 
-  const { user_mail, user_password } = req.body; // ← FALTABA ESTO
+    const query = "SELECT * FROM user WHERE user_mail = ?";
 
-  if (!user_mail || !user_password) {
-    return res.status(400).json({ message: "Faltan datos" });
-  }
+    db.query(query, [user_mail], async (err, rows) => {
+        if (err) return res.status(500).json({ message: "Error DB", err });
 
-  const query = "SELECT * FROM user WHERE user_mail = ? AND user_password = ?";
-  
-  db.query(query, [user_mail, user_password], (err, rows) => {
-    if (err) return res.status(500).json({ code: 500, message: err });
+        // No existe el correo
+        if (rows.length === 0) {
+            return res.status(401).json({ message: "Usuario no encontrado" });
+        }
 
-    if (rows.length === 1) {
-      const token = jwt.sign(
-        {
-          id: rows[0].user_id,
-          mail: rows[0].user_mail,
-          admin: rows[0].esadmin
-        },
-        JWT_KEY
-      );
+        const user = rows[0];
 
-      return res.status(200).json({ code: 200, token });
-    }
+        // Validar contraseña
+        if (user.user_password !== user_password) {
+            return res.status(401).json({ message: "Contraseña incorrecta" });
+        }
 
-    return res.status(401).json({ code: 401, message: "Credenciales incorrectas" });
-  });
+        // VALIDAR SI ES ADMIN
+        if (user.esadmin !== 1) {
+            return res.status(403).json({
+                message: "Acceso denegado. No eres administrador"
+            });
+        }
+
+        // Generar token SOLO si es admin
+        const token = jwt.sign(
+            {
+                id: user.id,
+                user_mail: user.user_mail,
+                esadmin: user.esadmin
+            },
+            process.env.SECRET_KEY,
+            { expiresIn: "2h" }
+        );
+
+        res.status(200).json({
+            code: 200,
+            token
+        });
+    });
 });
 
 
