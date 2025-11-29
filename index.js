@@ -1,46 +1,37 @@
-// dependencias
-require('dotenv').config();
+//dependencias
 const express = require('express');
 const morgan = require('morgan');
 const app = express();
-
-const esadmin = require('./middleware/esadmin');
-
-//para carpeta public
-app.use(express.static("public"));
-
-// Middlewares
-const auth = require('./middleware/auth');
-const notFound = require('./middleware/notFound');
-const index = require('./middleware/index');
+// middlewares
 const cors = require('./middleware/cors');
+const notFound = require('./middleware/notFound');
 
+//rutas 
+const userRuta = require('./Routes/User');
+const EmpleadoRuta = require('./Routes/empleados');
+
+//otros middlewares
 app.use(cors);
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// lobby
-app.get("/", index);
+//carga el indice.html de la carpeta public
+app.use(express.static("public")); 
 
-// RUTAS PUBLICAS 
-const authRuta = require('./Routes/authRoutes');
-const userRuta = require('./Routes/User');
-const EmpleadoRuta = require('./Routes/empleados');
-  
-app.use("/auth", authRuta);
+//ruta de usuario
 app.use("/user", userRuta);
 
-// RUTAS PRIVADAS
-app.use(auth); 
-app.use("/empleados", esadmin, EmpleadoRuta);
+//ruta de empleados
+app.use("/empleados", EmpleadoRuta);
 
-// 404
+//404
 app.use(notFound);
 
-// conectar database
+//bd y server
 require("./config/database");
 
+//si funciona el server
 app.listen(process.env.PORT || 3000, () => {
   console.log('Servidor corriendo en http://localhost:3000');
 });

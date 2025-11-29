@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Login</title>
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f0f0f0; }
+        .caja { background: white; padding: 20px; border: 1px solid #ccc; width: 300px; text-align: center; }
+        input { display: block; width: 90%; margin: 10px auto; padding: 8px; }
+        button { background: blue; color: white; border: none; padding: 10px 20px; cursor: pointer; width: 95%; }
+        button:hover { opacity: 0.8; }
+        .error { color: red; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+
+    <div class="caja">
+        <h2>Bienvenido</h2>
+        <input type="email" id="email" placeholder="Correo (admin@admin.com)">
+        <input type="password" id="pass" placeholder="Contraseña">
+        <button onclick="login()">Entrar</button>
+        <p id="mensaje" class="error"></p>
+    </div>
+
+    <script>
+        async function login() {
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('pass').value;
+
+            // peticin a la API y el server
+            const res = await fetch('/user/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ user_mail: email, user_password: pass })
+            });
+
+            const data = await res.json();
+
+            if (res.status === 200) {
+                localStorage.setItem('token', data.token); // guardar el token
+                window.location.href = 'panel.html';       // ir al panel
+            } else {
+                document.getElementById('mensaje').innerText = data.message;
+            }
+        }
+    </script>
+</body>
+</html>

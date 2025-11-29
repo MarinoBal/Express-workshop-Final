@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Panel de Empleados</title>
+    <style>
+        /* colores y estilos basicos */
+        body { font-family: sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+        .formulario { background: #eee; padding: 15px; margin-bottom: 20px; border: 1px solid #ccc; }
+        input { padding: 5px; margin: 5px; width: 45%; } /* Inputs a dos columnas */
+        button { cursor: pointer; padding: 8px 12px; border: none; color: white; }
+        .btn-guardar { background: green; width: 100%; margin-top: 10px; font-size: 16px; }
+        .btn-editar { background: #ffc107; color: black; }
+        .btn-borrar { background: red; }
+        .btn-salir { background: #555; float: right; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background: #333; color: white; }
+    </style>
+</head>
+<body>
+    
+    <button class="btn-salir" onclick="salir()">Cerrar Sesión</button>
+
+
+    <h1>Gestión de Empleados</h1>
+
+    <div class="formulario">
+        <h3 id="tituloForm">Nuevo Empleado</h3>
+        <input type="hidden" id="idEditar"> <input type="text" id="nombre" placeholder="Nombre">
+        <input type="text" id="apellidos" placeholder="Apellidos">
+        <input type="text" id="telefono" placeholder="Teléfono">
+        <input type="email" id="correo" placeholder="Correo">
+        <input type="text" id="direccion" placeholder="Dirección">
+        
+        <button class="btn-guardar" onclick="guardar()" id="btnAccion">Guardar Empleado</button>
+        <button onclick="limpiarFormulario()" style="background:#999; margin-top:5px; width:100%">Cancelar / Limpiar</button>
+    </div>
+
+    <input type="text" id="busqueda" placeholder="Buscar por nombre..." onkeyup="buscar()" style="width: 100%;">
+
+    <table>
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Correo</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody id="tabla"></tbody>
+    </table>
+
+    <script>
+        const token = localStorage.getItem('token');
+        if (!token) window.location.href = 'index.html'; // Protección básica
+
+        const API = '/empleados';
+
+        // 1 cargar los datos
+        async function cargar(url = API) {
+            const res = await fetch(url, { headers: { 'Authorization': 'Bearer ' + token } });
+            if (res.status === 403) salir(); // Si token expiro
+
+            const data = await res.json();
+            const filas = document.getElementById('tabla');
+            filas.innerHTML = ''; // Limpiar tabla
+
+            data.empleados.forEach(e => {
+                filas.innerHTML += `
+                    <tr>
+                        <td>${e.nombre} ${e.apellidos}</td>
+                        <td>${e.correo}</td>
+                        <td>
+                            <button class="btn-editar" onclick='prepararEdicion(${JSON.stringify(e)})'>Editar</button>
+                            <button class="btn-borrar" onclick="borrar(${e.empleado_id})">Borrar</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        // si se crea o actualiza se guarda
+        async function guardar() {
+            const id = document.getElementById('idEditar').value;
+            
+            const datos = {
+                nombre: document.getElementById('nombre').value,
+                apellidos: document.getElementById('apellidos').value,
+                telefono: document.getElementById('telefono').value,
+                correo: document.getElementById('correo').value,
+                direccion: document.getElementById('direccion').value
+            };
+
+            let metodo = 'POST';
+            let urlFinal = API;
+
+            // si hay un id, es actualizacion
+            if (id) {
+                metodo = 'PUT';
+                urlFinal = API + '/' + id; 
+            }
+
+            const res = await fetch(urlFinal, {
+                method: metodo,
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify(datos)
+            });
+
+            if (res.ok) {
+                alert("Guardado con éxito");
+                limpiarFormulario(); 
+                cargar();            
+            } else {
+                alert("Error al guardar");
+            }
+        }
+
+        // subir datos al formulario para editar
+        
+        function prepararEdicion(empleado) {
+            document.getElementById('idEditar').value = empleado.empleado_id;
+            document.getElementById('nombre').value = empleado.nombre;
+            document.getElementById('apellidos').value = empleado.apellidos;
+            document.getElementById('telefono').value = empleado.telefono;
+            document.getElementById('correo').value = empleado.correo;
+            document.getElementById('direccion').value = empleado.direccion;
+
+            // Cambiar textos visuales para que sepa que está editando
+            document.getElementById('tituloForm').innerText = "Editando Empleado (ID: " + empleado.empleado_id + ")";
+            document.getElementById('btnAccion').innerText = "Actualizar Empleado";
+            document.getElementById('btnAccion').style.background = "#ffc107"; // Amarillo
+            document.getElementById('btnAccion').style.color = "black";
+            
+            // Subir scroll arriba suavemente
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // 4. limpiar formulario
+        function limpiarFormulario() {
+            document.getElementById('idEditar').value = "";
+            document.querySelectorAll('input:not(#busqueda):not(#idEditar)').forEach(i => i.value = "");
+            
+            document.getElementById('tituloForm').innerText = "Nuevo Empleado";
+            document.getElementById('btnAccion').innerText = "Guardar Empleado";
+            document.getElementById('btnAccion').style.background = "green";
+            document.getElementById('btnAccion').style.color = "white";
+        }
+
+        // eliminar empleado
+        async function borrar(id) {
+            if (!confirm('¿Eliminar este empleado?')) return;
+            
+            await fetch(API + '/' + id, {
+                method: 'DELETE',
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            cargar();
+        }
+
+        // buscar empleado
+        function buscar() {
+            const txt = document.getElementById('busqueda').value;
+            if (txt) cargar(API + '/buscar?nombre=' + txt);
+            else cargar();
+        }
+
+        function salir() {
+            localStorage.removeItem('token');
+            window.location.href = 'index.html';
+        }
+
+        // iniciar
+        cargar();
+    </script>
+</body>
+</html> 

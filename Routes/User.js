@@ -55,16 +55,16 @@ router.post("/login", (req, res) => {
             });
         }
 
-        // Generar token SOLO si es admin
-        const token = jwt.sign(
-            {
-                id: user.id,
-                user_mail: user.user_mail,
-                esadmin: user.esadmin
-            },
-            process.env.SECRET_KEY,
-            { expiresIn: "2h" }
-        );
+      
+const token = jwt.sign(
+    {
+        id: user.user_id,          
+        user_mail: user.user_mail,
+        esadmin: user.esadmin
+    },
+    JWT_KEY,                        
+    { expiresIn: "2h" }
+);
 
         res.status(200).json({
             code: 200,
