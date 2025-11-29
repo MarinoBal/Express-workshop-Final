@@ -3,15 +3,13 @@ require('dotenv').config();
 const express = require('express');
 const morgan = require('morgan');
 const app = express();
+
 const esadmin = require('./middleware/esadmin');
 
-// rutas
-const authRuta = require('./Routes/authRoutes');
-const userRuta = require('./Routes/User');
-const EmpleadoRuta = require('./Routes/empleados');
+//para carpeta public
+app.use(express.static("public"));
 
-
-// middleware
+// Middlewares
 const auth = require('./middleware/auth');
 const notFound = require('./middleware/notFound');
 const index = require('./middleware/index');
@@ -25,13 +23,17 @@ app.use(express.urlencoded({ extended: true }));
 // lobby
 app.get("/", index);
 
-// rutas públicas
+// RUTAS PUBLICAS 
+const authRuta = require('./Routes/authRoutes');
+const userRuta = require('./Routes/User');
+const EmpleadoRuta = require('./Routes/empleados');
+  
 app.use("/auth", authRuta);
 app.use("/user", userRuta);
 
-// rutas privadas
-  app.use(auth);
-app.use("/empleados",auth, esadmin, EmpleadoRuta);
+// RUTAS PRIVADAS
+app.use(auth); 
+app.use("/empleados", esadmin, EmpleadoRuta);
 
 // 404
 app.use(notFound);

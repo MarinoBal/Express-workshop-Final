@@ -27,7 +27,7 @@ router.get("/profile", require("../middleware/auth"), (req, res, next) => {
   });
 });
 
-// LOGIN
+// login
 router.post("/login", (req, res) => {
     const { user_mail, user_password } = req.body;
 
